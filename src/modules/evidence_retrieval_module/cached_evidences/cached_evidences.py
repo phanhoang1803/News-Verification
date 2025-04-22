@@ -90,6 +90,8 @@ class BaseEvidencesModule:
         with open(json_file_path, "r") as file:
             self.data = json.load(file)
 
+        self.base_path = json_file_path[:json_file_path.find('queries_dataset')].rstrip('\\/')
+
         # Initialize SentenceTransformer model
         self.model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -146,6 +148,7 @@ class BaseEvidencesModule:
         """
         try:
             if not os.path.exists(image_path):
+                print(f"Image path {image_path} does not exist")
                 return ""
             
             with Image.open(image_path) as img:
@@ -646,8 +649,9 @@ class BaseEvidencesModule:
         item = self.data.get(str(idx))
         if not item:
             return None
-            
-        return item.get("folder_path")
+        
+        folder_path = os.path.join(self.base_path, item.get("folder_path"))
+        return folder_path
 
     def get_evidence_by_index(self, index: Union[int, str], query: str = "",
                             max_results: int = 5, threshold: float = 0.7,
@@ -713,7 +717,7 @@ class TextEvidencesModule(BaseEvidencesModule):
             for category in image_categories:
                 for item in annotation_data.get(category, []):
                     image_path = item.get('image_path', '')
-                    image_data = self._load_and_encode_image(image_path)
+                    image_data = self._load_and_encode_image(os.path.join(self.base_path, image_path))
                     if not image_data:
                         continue
                     
@@ -895,7 +899,7 @@ class ImageEvidencesModule(BaseEvidencesModule):
             
             for category in categories:
                 for item in annotation_data.get(category, []):
-                    image_data = self._load_and_encode_image(item.get("image_path", None))
+                    image_data = self._load_and_encode_image(os.path.join(self.base_path, item.get("image_path", None)))
                     if not image_data:
                         continue
                     

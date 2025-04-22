@@ -1,0 +1,49 @@
+$dataPath = "path\to\test_dataset"
+$entitiesPath = "path\to\links_test.json"
+$imageEvidencesPath = "path\to\inverse_search\test\test.json"
+$textEvidencesPath = "path\to\direct_search\test\test.json"
+$contextDirPath = "path\to\context\test"
+
+# List of Gemini API keys to rotate through
+$apiKeys = @(
+    "GEMINI_API_KEY",
+    "GEMINI_API_KEY",
+)
+
+# Define the batch size
+$batchSize = 500
+$totalItems = 5000
+
+# Create and run commands for each batch, rotating through API keys
+$keyIndex = 0
+for ($i = 0; $i -lt $totalItems; $i += $batchSize) {
+    $startIdx = $i
+    $endIdx = $i + $batchSize
+    
+    # Get current API key using rotation
+    $currentApiKey = $apiKeys[$keyIndex]
+    
+    # Build command with current API key
+    $cmd = "python .\src\inference_newsclippings.py " +
+           "--data_path `"$dataPath`" " +
+           "--entities_path `"$entitiesPath`" " +
+           "--image_evidences_path `"$imageEvidencesPath`" " +
+           "--text_evidences_path `"$textEvidencesPath`" " +
+           "--context_dir_path `"$contextDirPath`" " +
+           "--gemini_api_key $currentApiKey " +
+           "--skip_existing " +
+           "--start_idx $startIdx " +
+           "--end_idx $endIdx"
+    
+    # Start the process
+    Write-Host "Starting job for range $startIdx-$endIdx with API key #$($keyIndex+1)"
+    Start-Process powershell -ArgumentList "-Command $cmd"
+    
+    # Move to next API key in rotation
+    $keyIndex = ($keyIndex + 1) % $apiKeys.Count
+    
+    # Optional: small delay to prevent overwhelming the system
+    Start-Sleep -Seconds 1
+}
+
+Write-Host "All jobs started!" -ForegroundColor Green

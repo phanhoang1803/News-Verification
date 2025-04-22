@@ -214,8 +214,8 @@ def main():
     elif args.vlm_model == "gemini":
         vlm_connector = GeminiConnector(
             api_key=args.gemini_api_key if args.gemini_api_key is not None else os.environ["GEMINI_API_KEY"],
-            # model_name="gemini-2.0-flash-001"
-            model_name="gemini-2.5-flash-preview-04-17"
+            model_name="gemini-2.0-flash-001"
+            # model_name="gemini-2.5-flash-preview-04-17"
         )
     else:
         raise ValueError(f"Invalid VLM model: {args.vlm_model}")
@@ -304,7 +304,7 @@ def main():
                 json.dump(error_item, f, indent=2, ensure_ascii=False)
             error_items.append(error_item)
             print(f"Error processing item {idx}: {e}")
-            # raise e
+            raise e
                 
     total_time = time.time() - total_start_time
     
